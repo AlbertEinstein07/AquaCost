@@ -1,6 +1,6 @@
 workflows:
   ios-capacitor:
-    name: iOS App Store Build
+    name: Capacitor iOS Build
     instance_type: mac_mini_m2
     max_build_duration: 60
 
@@ -8,36 +8,28 @@ workflows:
       vars:
         NODE_VERSION: "18"
       xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.ohmshankar.placeholder
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: |
+          npm install
 
       - name: Build web app
-        script: npm run build
+        script: |
+          npm run build
 
       - name: Sync Capacitor
-        script: npx cap sync ios
-
-      - name: Archive iOS app
         script: |
-          xcodebuild archive \
+          npx cap sync ios
+
+      - name: Build iOS (simulator)
+        script: |
+          xcodebuild \
             -workspace ios/App/App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -sdk iphoneos \
-            -archivePath build/App.xcarchive \
-            CODE_SIGN_STYLE=Automatic
-
-      - name: Export IPA
-        script: |
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/ipa \
-            -exportOptionsPlist /Users/builder/exportOptions.plist
-
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max' \
+            build
     artifacts:
-      - build/ipa/*.ipa
+      - build/App.xcarchive
